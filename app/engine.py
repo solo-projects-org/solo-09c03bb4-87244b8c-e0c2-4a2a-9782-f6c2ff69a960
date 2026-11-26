@@ -470,3 +470,26 @@ def compute(sheets: Sequence[Sheet], datum: str = "D0", span_limit: int = 20) ->
 
     ordered = [results[p] for p in points]
     return ComputeReport(datum, ordered, [], len(sheets), len(points))
+
+
+# --------------------------------------------------------------------------- #
+# 断面/测深领域类型也允许从 app.engine 直接导入（实现位于 app.sections）。
+# --------------------------------------------------------------------------- #
+from .sections import (  # noqa: E402,F401
+    SectionReport,
+    SectionResult,
+    Sounding,
+    SoundingRow,
+    SoundingValidationError,
+    build_section_report,
+    build_zero_index,
+    changed_zero_points,
+    compute_section,
+    compute_section_results,
+    compute_sections,
+    evaluate_sections,
+    parse_csv,
+    parse_sounding_csv,
+    recompute_sections,
+    soundings_from_dicts,
+)

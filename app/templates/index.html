@@ -3,23 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>港区水深基准改正表</title>
+<title>港区水深基准改正表 · 航道复测断面最浅水深</title>
 <style>
-  :root { --ok:#1a7f37; --fail:#b42318; --pend:#9a6700; --line:#d0d7de; }
+  :root { --ok:#1a7f37; --fail:#b42318; --pend:#9a6700; --line:#d0d7de; --brand:#0f2f56; }
   * { box-sizing: border-box; }
   body { margin:0; font-family: "Noto Sans CJK SC","PingFang SC","Microsoft YaHei",sans-serif;
          background:#f6f8fa; color:#1f2328; }
   header { background:#0f2f56; color:#fff; padding:16px 24px; }
   header h1 { margin:0 0 4px; font-size:20px; }
   header .sub { font-size:13px; opacity:.85; }
-  main { max-width:1180px; margin:0 auto; padding:20px 24px 60px; }
+  main { max-width:1280px; margin:0 auto; padding:20px 24px 60px; }
   section { background:#fff; border:1px solid var(--line); border-radius:8px;
             padding:16px 20px; margin-bottom:20px; }
   h2 { font-size:16px; margin:0 0 12px; }
+  h3 { font-size:14px; margin:14px 0 8px; }
   table { border-collapse:collapse; width:100%; font-size:13px; }
   th, td { border:1px solid var(--line); padding:7px 9px; text-align:left; vertical-align:top; }
   th { background:#f0f3f6; white-space:nowrap; }
-  td.num { text-align:right; font-variant-numeric: tabular-nums; }
+  td.num { text-align:right; font-variant-numeric: tabular-nums; white-space:nowrap; }
   .badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:12px;
            color:#fff; white-space:nowrap; }
   .badge.OK { background:var(--ok); }
@@ -29,28 +30,219 @@
   .unbounded { color:var(--fail); font-weight:600; }
   form .grid { display:grid; grid-template-columns:repeat(6, minmax(110px,1fr)); gap:10px; }
   label { font-size:12px; color:#57606a; display:block; margin-bottom:3px; }
-  input { width:100%; padding:6px 8px; border:1px solid var(--line); border-radius:6px; font-size:13px; }
-  button { padding:7px 16px; border:0; border-radius:6px; background:#0f2f56; color:#fff;
+  input, textarea, select { width:100%; padding:6px 8px; border:1px solid var(--line);
+           border-radius:6px; font-size:13px; font-family:inherit; }
+  textarea { min-height:64px; }
+  button { padding:7px 16px; border:0; border-radius:6px; background:var(--brand); color:#fff;
            cursor:pointer; font-size:13px; }
   button.secondary { background:#e7ebef; color:#1f2328; }
   button:hover { opacity:.9; }
-  .actions { margin-top:12px; display:flex; gap:10px; align-items:center; }
+  .actions { margin-top:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
   #msg { margin-top:10px; font-size:13px; }
   #msg.err { color:var(--fail); } #msg.ok { color:var(--ok); }
+  .flash { border-radius:6px; padding:10px 14px; margin-bottom:16px; font-size:13px; }
+  .flash.ok { background:#eaf7ee; border:1px solid #a6e3bb; color:var(--ok); }
+  .flash.err { background:#fff5f4; border:1px solid #f0b8b3; color:var(--fail);
+               white-space:pre-wrap; }
   .conflict { border:1px solid #f0b8b3; background:#fff5f4; border-radius:6px;
               padding:10px 12px; margin-bottom:8px; font-size:13px; }
   .conflict code { background:#fbe9e7; padding:1px 5px; border-radius:4px; }
   details summary { cursor:pointer; font-size:13px; color:#0f2f56; }
-  .pill { font-size:12px; border:1px solid var(--line); border-radius:10px; padding:1px 8px; }
+  .pill { font-size:12px; border:1px solid var(--line); border-radius:10px;
+          padding:1px 8px; white-space:nowrap; }
+  .chip { display:inline-block; background:#ddf4e4; color:var(--ok); border:1px solid #9fd8b2;
+          border-radius:10px; padding:1px 9px; margin:1px 3px 1px 0; font-size:12px;
+          font-weight:600; }
+  .chip.zero { background:#eef1f4; color:#344054; border-color:var(--line); font-weight:400; }
+  .chip.miss { background:#fff0ee; color:var(--fail); border-color:#f0b8b3; font-weight:600; }
+  .chip.unfit { background:#fdf3dd; color:var(--pend); border-color:#ecd28a; font-weight:600; }
+  .depth-best { font-size:15px; font-weight:700; color:var(--ok); }
+  .reco-flag { font-size:11px; color:var(--brand); background:#e7eefc; border-radius:4px;
+               padding:0 5px; margin-left:4px; }
+  table.detail { margin-top:8px; font-size:12px; }
+  table.detail th, table.detail td { padding:4px 7px; }
+  .upload-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width: 900px) { .upload-grid { grid-template-columns:1fr; }
+    form .grid { grid-template-columns:repeat(2,1fr); } }
+  .hint { font-size:12px; color:#656d76; margin-top:6px; line-height:1.6; }
+  .mono { font-variant-numeric:tabular-nums; }
 </style>
 </head>
 <body>
 <header>
-  <h1>港区水深基准改正表</h1>
-  <div class="sub">基准零点 {{ datum }} 改正量固定为 0；高差单位毫米；稳健区间 = 覆盖撤掉任一张联测单后所有可能改正量的最窄闭区间；跨度 ≤ {{ span_limit }} mm 且有界方可合图。</div>
+  <h1>港区水深基准改正表 · 航道复测断面最浅水深</h1>
+  <div class="sub">
+    基准零点 {{ datum }} 改正量固定为 0；高差/水深单位毫米。
+    每笔化算水深 ＝ 原水深 − 所属零点的稳健上界（rob_hi）；断面取最小值，并列测点全列。
+    断面内零点全部“有改正数据且可合图”才显示最浅值，否则标 <strong>待核</strong>。
+    稳健范围跨度 ≤ {{ span_limit }} mm 且有界方可合图。
+  </div>
 </header>
 <main>
 
+{% if flash_ok %}<div class="flash ok">{{ flash_ok }}</div>{% endif %}
+{% if flash_error %}<div class="flash err">{{ flash_error }}</div>{% endif %}
+
+<!-- ======================= 断面最浅结果 ======================= -->
+<section id="sections">
+  <h2>航道复测断面：保守最浅水深与测点
+    {% if section_snapshot %}
+      <span class="muted" style="font-weight:400;font-size:12px">
+        核算时间：{{ section_snapshot.computed_at | localtime }}
+        ｜测深 {{ section_snapshot.sounding_count | default(0) }} 笔
+        ｜断面 {{ section_snapshot.section_count | default(section_snapshot.sections | length) }} 个
+        ｜可查 {{ section_snapshot.ok_count | default(0) }}
+        ｜待核 {{ section_snapshot.pending_count | default(0) }}
+        {% if section_snapshot.mode == 'incremental' %}
+          ｜增量重算断面 {{ section_snapshot.recomputed_sections | length }} 个
+          {% if section_snapshot.changed_zeros %}
+            （变化零点：{{ section_snapshot.changed_zeros | join('、') }}）
+          {% endif %}
+        {% endif %}
+      </span>
+    {% endif %}
+    <span style="float:right;font-weight:400;font-size:12px">
+      <a href="/api/sections">断面 JSON</a> ·
+      <a href="/api/soundings.csv">下载现行 CSV</a>
+    </span>
+  </h2>
+
+  {% if section_snapshot and section_snapshot.sections %}
+  <table>
+    <thead><tr>
+      <th>断面号</th><th>核定状态</th>
+      <th>保守最浅水深 (mm)</th><th>约 (m)</th>
+      <th>并列最浅测点号</th>
+      <th>涉及零点</th>
+      <th>待核零点 / 原因</th>
+      <th>测点明细</th>
+    </tr></thead>
+    <tbody>
+    {% for s in section_snapshot.sections %}
+      <tr>
+        <td><strong>{{ s.section_id }}</strong>
+          {% if s.recomputed is defined and s.recomputed %}
+            <span class="reco-flag" title="本次更新后重算">重算</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if s.status == 'OK' %}
+            <span class="badge OK">可查最浅</span>
+          {% else %}
+            <span class="badge PENDING">待核</span>
+          {% endif %}
+        </td>
+        <td class="num">
+          {% if s.shallowest_depth is not none %}
+            <span class="depth-best">{{ s.shallowest_depth }}</span>
+          {% else %}—{% endif %}
+        </td>
+        <td class="num">
+          {% if s.shallowest_depth_m is not none %}{{ '%.3f'|format(s.shallowest_depth_m) }}{% else %}—{% endif %}
+        </td>
+        <td>
+          {% if s.shallowest_points %}
+            {% for p in s.shallowest_points %}<span class="chip">{{ p }}</span>{% endfor %}
+          {% else %}<span class="muted">—</span>{% endif %}
+        </td>
+        <td>
+          {% for z in s.zeros %}<span class="chip zero">{{ z }}</span>{% endfor %}
+        </td>
+        <td style="min-width:220px">
+          {% if s.status != 'OK' %}
+            {% for prob in s.problems %}
+              <div style="margin-bottom:3px">
+                {% if prob.kind == 'MISSING' %}
+                  <span class="chip miss">{{ prob.point }} · {{ prob.label }}</span>
+                {% else %}
+                  <span class="chip unfit">{{ prob.point }} · {{ prob.label }}</span>
+                {% endif %}
+                <div class="muted" style="font-size:12px">{{ prob.reason }}</div>
+              </div>
+            {% endfor %}
+          {% else %}<span class="muted">{{ s.reason }}</span>{% endif %}
+        </td>
+        <td>
+          <details>
+            <summary>{{ s.points | length }} 个测点</summary>
+            <table class="detail">
+              <thead><tr>
+                <th>测点号</th><th>零点</th><th>原水深 (mm)</th>
+                <th>零点稳健上界</th><th>化算水深 (mm)</th><th>最浅</th>
+              </tr></thead>
+              <tbody>
+              {% for p in s.points %}
+                <tr>
+                  <td>{{ p.point_id }}</td>
+                  <td>{{ p.zero_point }}</td>
+                  <td class="num">{{ p.raw_depth }}</td>
+                  <td class="num">
+                    {% if p.rob_hi is none %}<span class="muted">无/不可用</span>
+                    {% else %}{{ p.rob_hi }}{% endif %}
+                  </td>
+                  <td class="num">
+                    {% if p.corrected_depth is none %}<span class="muted">—</span>
+                    {% else %}{{ p.corrected_depth }}{% endif %}
+                  </td>
+                  <td>{% if p.is_shallowest %}<span class="chip">最浅</span>{% endif %}</td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </details>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="muted">尚未上传测深 CSV。请在下方上传；容器首次启动如开启样例会自动载入覆盖 SEC01–SEC07 的样例。</p>
+  {% endif %}
+</section>
+
+<!-- ======================= CSV 上传 / 联合提交 ======================= -->
+<section id="upload">
+  <h2>上传测深 CSV（整批替换原始测深）／与联测单同时提交</h2>
+  <form method="post" enctype="multipart/form-data" action="/soundings/upload">
+    <div class="upload-grid">
+      <div>
+        <label for="csv-file">选择 CSV 文件（四列：断面号,测点号,零点,原水深）</label>
+        <input type="file" id="csv-file" name="file" accept=".csv,text/csv">
+        <div class="hint">
+          原水深为从零点向下计的整数毫米；同一断面内测点号不得重复，跨断面允许重号。
+          支持 UTF-8/带 BOM/GBK 编码，首行可为中英文表头。整批替换：新 CSV 校验失败时，
+          现行测深与断面结果原样保留。
+        </div>
+      </div>
+      <div>
+        <label>…或直接粘贴 CSV 文本（未选文件时使用）</label>
+        <textarea name="csv" placeholder="断面号,测点号,零点,原水深&#10;SEC01,P01,D0,2000&#10;SEC01,P02,Z1,2102"></textarea>
+      </div>
+    </div>
+
+    <details style="margin-top:12px">
+      <summary>可选：同时补交 / 换报联测单（与 CSV 在<strong>同一个事务</strong>生效，断面结果对应同一状态）</summary>
+      <div style="margin-top:10px">
+        <label>联测单 JSON 数组（字段：sid, point_a, point_b, lo, hi；编号已存在时需在下方填换报编号）</label>
+        <textarea name="sheets" style="min-height:90px"
+          placeholder='[{"sid":"S10","point_a":"D0","point_b":"Z9","lo":50,"hi":54},
+ {"sid":"S11","point_a":"D0","point_b":"Z9","lo":50,"hi":54}]'></textarea>
+        <div style="margin-top:8px; max-width:420px">
+          <label>按号换报的编号（多个用逗号分隔；补交新单留空）</label>
+          <input name="replace_ids" placeholder="例如：S08">
+        </div>
+      </div>
+    </details>
+
+    <div class="actions">
+      <button type="submit" formaction="/soundings/upload">仅上传 CSV 并整批替换</button>
+      <button type="submit" class="secondary" formaction="/updates/submit">CSV 与联测单同时提交</button>
+      <span class="pill">任一校验/矛盾/保存失败：沿用最近成功生效的测深、改正表与断面结果。</span>
+    </div>
+  </form>
+</section>
+
+<!-- ======================= 联测单表单（原有） ======================= -->
 <section>
   <h2>补交联测单 / 按号换报</h2>
   <form id="sheet-form" class="grid">
@@ -65,12 +257,13 @@
   </form>
   <div class="actions">
     <button type="button" class="secondary" id="sample-btn">载入样例（仅空库可用）</button>
-    <span class="pill">同编号提交＝按号换报；新编号＝补交。失败时现行单据与改正表不变。</span>
+    <span class="pill">同编号提交＝按号换报；新编号＝补交。提交后仅重算用到“资格/稳健上界变化零点”的断面（含待核断面）。</span>
   </div>
   <div id="msg"></div>
   <div id="conflicts"></div>
 </section>
 
+<!-- ======================= 现行改正表（原有） ======================= -->
 <section>
   <h2>现行改正表
     {% if snapshot %}
@@ -120,6 +313,7 @@
   </table>
 </section>
 
+<!-- ======================= 联测单列表（原有） ======================= -->
 <section>
   <details open>
     <summary>现行联测单（{{ sheets | length }} 张，lo ≤ h_B − h_A ≤ hi）</summary>
@@ -167,14 +361,14 @@ document.getElementById('sheet-form').addEventListener('submit', async (ev) => {
     const body = isReplace ? JSON.stringify(payload) : JSON.stringify({sheets: [payload]});
     const resp = await fetch(url, {method, headers: {'Content-Type': 'application/json'}, body});
     const data = await resp.json();
-    if (resp.ok) { setMsg('提交成功，单据与改正表已同时生效。', true); showConflicts([]); setTimeout(()=>location.reload(), 600); }
-    else { setMsg(data.error || '提交失败', false); showConflicts(data.contradictions); }
+    if (resp.ok) { setMsg('提交成功，单据、改正表与受影响断面已同时生效。', true); showConflicts([]); setTimeout(()=>location.reload(), 700); }
+    else { setMsg(data.error || '提交失败，现行数据与断面结果未变。', false); showConflicts(data.contradictions); }
   } catch (e) { setMsg('网络错误：' + e, false); }
 });
 document.getElementById('sample-btn').addEventListener('click', async () => {
   const resp = await fetch('/api/sample', {method: 'POST'});
   const data = await resp.json();
-  if (resp.ok) { setMsg('样例已载入。', true); setTimeout(()=>location.reload(), 500); }
+  if (resp.ok) { setMsg('样例已载入。', true); setTimeout(()=>location.reload(), 600); }
   else setMsg(data.error || '载入失败', false);
 });
 </script>
